@@ -1,23 +1,35 @@
-#!/usr/bin/env python
-
-import musicbrainzngs
-musicbrainzngs.set_useragent("Beets recording date plugin", "0.1", "http://github.com/tweitzel")
+# -- coding: utf-8 --
+from __future__ import division, absolute_import, print_function
 
 from beets.plugins import BeetsPlugin
 from beets import autotag, library, ui, util, mediafile
 from beets.autotag import hooks
 
+import musicbrainzngs
+musicbrainzngs.set_useragent(
+    "Beets recording date plugin",
+    "0.1",
+    "http://github.com/tweitzel"
+)
+
+
 class RecordingDatePlugin(BeetsPlugin):
     def __init__(self):
         super(RecordingDatePlugin, self).__init__()
-        for recording_field in (u'recording_year', u'recording_month', u'recording_day'):
-          field = mediafile.MediaField(
-              mediafile.MP3DescStorageStyle(recording_field),
-              mediafile.StorageStyle(recording_field)
-          )
-          self.add_media_field(recording_field, field)
+        for recording_field in (
+             u'recording_year',
+             u'recording_month',
+             u'recording_day'):
+            field = mediafile.MediaField(
+                mediafile.MP3DescStorageStyle(recording_field),
+                mediafile.StorageStyle(recording_field))
+            self.add_media_field(recording_field, field)
+
     def commands(self):
-        recording_date_command = ui.Subcommand('recordingdate', help="Retrieve the date of the first known recording of a track.", aliases=['rdate'])
+        recording_date_command = ui.Subcommand(
+            'recordingdate',
+            help="Retrieve the date of the first known recording of a track.",
+            aliases=['rdate'])
         recording_date_command.func = self.func
         return [recording_date_command]
 
@@ -41,14 +53,14 @@ class RecordingDatePlugin(BeetsPlugin):
                                item_formatted)
                 continue
             # Apply.
-            for recording_field in ('year','month','day'):
+            for recording_field in ('year', 'month', 'day'):
                 write = False
                 if recording_field in recording_date.keys():
-                    item[u'recording_' + recording_field] = recording_date[recording_field]
+                    item[u'recording_' +
+                         recording_field] = recording_date[recording_field]
                     write = True
                 if write:
                     item.write()
-                
 
     def _make_date_values(self, date_str):
         date_parts = date_str.split('-')
@@ -60,20 +72,22 @@ class RecordingDatePlugin(BeetsPlugin):
                     date_num = int(date_part)
                 except ValueError:
                     continue
-                date_values[key]=date_num
+                date_values[key] = date_num
         return date_values
 
     def get_first_recording_year(self, mb_track_id):
-        x = musicbrainzngs.get_recording_by_id(mb_track_id,includes=['releases'])
+        x = musicbrainzngs.get_recording_by_id(
+            mb_track_id,
+            includes=['releases'])
         oldest_release = {'year': None}
         for release in x['recording']['release-list']:
             release_date = self._make_date_values(release['date'])
-            if oldest_release['year'] == None or oldest_release['year'] > release_date['year']:
+            if (oldest_release['year'] is None or
+                    oldest_release['year'] > release_date['year']):
                 oldest_release = release_date
             elif oldest_release['year'] == release_date['year']:
-                if 'month' in release_date.keys() and 'month' in oldest_release.keys() and oldest_release['month'] > release_date['month']: 
-                        oldest_release = release_date
+                if ('month' in release_date.keys() and
+                        'month' in oldest_release.keys() and
+                        oldest_release['month'] > release_date['month']):
+                    oldest_release = release_date
         return oldest_release
-
-
-
