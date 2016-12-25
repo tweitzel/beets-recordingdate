@@ -8,7 +8,7 @@ from beets.autotag import hooks
 import musicbrainzngs
 musicbrainzngs.set_useragent(
     "Beets recording date plugin",
-    "0.1",
+    "0.2",
     "http://github.com/tweitzel"
 )
 
@@ -19,9 +19,12 @@ class RecordingDatePlugin(BeetsPlugin):
         for recording_field in (
              u'recording_year',
              u'recording_month',
-             u'recording_day'):
+             u'recording_day',
+             u'recording_disambiguation'):
             field = mediafile.MediaField(
                 mediafile.MP3DescStorageStyle(recording_field),
+                mediafile.MP4StorageStyle('----:com.apple.iTunes:{}'.format( 
+                    recording_field)),
                 mediafile.StorageStyle(recording_field))
             self.add_media_field(recording_field, field)
 
@@ -46,7 +49,8 @@ class RecordingDatePlugin(BeetsPlugin):
                 continue
 
             # Get the MusicBrainz recording info.
-            recording_date = self.get_first_recording_year(item.mb_trackid)
+            (recording_date, disambig) = self.get_first_recording_year(
+                item.mb_trackid)
             if not recording_date:
                 self._log.info(u'Recording ID not found: {0} for track {0}',
                                item.mb_trackid,
@@ -59,8 +63,12 @@ class RecordingDatePlugin(BeetsPlugin):
                     item[u'recording_' +
                          recording_field] = recording_date[recording_field]
                     write = True
-                if write:
-                    item.write()
+            if disambig is not None:
+                item[u'recording_disambiguation'] = unicode(disambig)
+                write = True
+            if write:
+                self._log.info(u'Applying changes to {0}', item_formatted)
+                item.write()
 
     def _make_date_values(self, date_str):
         date_parts = date_str.split('-')
@@ -75,12 +83,26 @@ class RecordingDatePlugin(BeetsPlugin):
                 date_values[key] = date_num
         return date_values
 
-    def get_first_recording_year(self, mb_track_id):
+    def _recurse_relations(self, mb_track_id, oldest_release, relation_type):
         x = musicbrainzngs.get_recording_by_id(
             mb_track_id,
-            includes=['releases'])
-        oldest_release = {'year': None}
+            includes=['releases', 'recording-rels'])
+        if 'recording-relation-list' in x['recording'].keys():
+            # recurse down into edits and remasters.
+            # Note remasters are deprecated in musicbrainz, but some entries
+            # may still exist.
+            for subrecording in x['recording']['recording-relation-list']:
+                if ('direction' in subrecording.keys() and
+                        subrecording['direction'] == 'backward'):
+                    continue
+                (oldest_release, relation_type) = self._recurse_relations(
+                    subrecording['target'],
+                    oldest_release,
+                    subrecording['type'])
         for release in x['recording']['release-list']:
+            if 'date' not in release.keys():
+                # A release without a date. Skip over it.
+                continue
             release_date = self._make_date_values(release['date'])
             if (oldest_release['year'] is None or
                     oldest_release['year'] > release_date['year']):
@@ -90,4 +112,13 @@ class RecordingDatePlugin(BeetsPlugin):
                         'month' in oldest_release.keys() and
                         oldest_release['month'] > release_date['month']):
                     oldest_release = release_date
-        return oldest_release
+        return (oldest_release, relation_type)
+
+    def get_first_recording_year(self, mb_track_id):
+        relation_type = None
+        oldest_release = {'year': None}
+        (oldest_release, relation_type) = self._recurse_relations(
+            mb_track_id,
+            oldest_release,
+            relation_type)
+        return (oldest_release, relation_type)
