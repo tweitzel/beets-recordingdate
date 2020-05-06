@@ -43,11 +43,14 @@ class RecordingDatePlugin(BeetsPlugin):
     def recording_date(self, lib, query):
         for item in lib.items(query):
             item_formatted = format(item)
+
             if not item.mb_trackid:
                 self._log.info(u'Skipping track with no mb_trackid: {0}',
                                item_formatted)
                 continue
-
+            if u'recording_year' in item and item.recording_year:
+                self._log.info(u'Skipping already processed track: {0}', item_formatted)
+                continue
             # Get the MusicBrainz recording info.
             (recording_date, disambig) = self.get_first_recording_year(
                 item.mb_trackid)
@@ -69,6 +72,7 @@ class RecordingDatePlugin(BeetsPlugin):
             if write:
                 self._log.info(u'Applying changes to {0}', item_formatted)
                 item.write()
+                item.store()
 
     def _make_date_values(self, date_str):
         date_parts = date_str.split('-')
