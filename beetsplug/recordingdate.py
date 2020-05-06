@@ -23,7 +23,7 @@ class RecordingDatePlugin(BeetsPlugin):
              u'recording_disambiguation'):
             field = mediafile.MediaField(
                 mediafile.MP3DescStorageStyle(recording_field),
-                mediafile.MP4StorageStyle('----:com.apple.iTunes:{}'.format( 
+                mediafile.MP4StorageStyle('----:com.apple.iTunes:{}'.format(
                     recording_field)),
                 mediafile.StorageStyle(recording_field))
             self.add_media_field(recording_field, field)
@@ -64,7 +64,7 @@ class RecordingDatePlugin(BeetsPlugin):
                          recording_field] = recording_date[recording_field]
                     write = True
             if disambig is not None:
-                item[u'recording_disambiguation'] = unicode(disambig)
+                item[u'recording_disambiguation'] = str(disambig)
                 write = True
             if write:
                 self._log.info(u'Applying changes to {0}', item_formatted)
