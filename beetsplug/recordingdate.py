@@ -16,6 +16,11 @@ musicbrainzngs.set_useragent(
 class RecordingDatePlugin(BeetsPlugin):
     def __init__(self):
         super(RecordingDatePlugin, self).__init__()
+        self.import_stages = [self.on_import]
+        self.config.add({
+            'auto': True,
+            'force': False,
+        })
         for recording_field in (
              u'recording_year',
              u'recording_month',
@@ -42,37 +47,47 @@ class RecordingDatePlugin(BeetsPlugin):
 
     def recording_date(self, lib, query):
         for item in lib.items(query):
-            item_formatted = format(item)
+            self.process_file(item)
 
-            if not item.mb_trackid:
-                self._log.info(u'Skipping track with no mb_trackid: {0}',
-                               item_formatted)
-                continue
-            if u'recording_year' in item and item.recording_year:
-                self._log.info(u'Skipping already processed track: {0}', item_formatted)
-                continue
-            # Get the MusicBrainz recording info.
-            (recording_date, disambig) = self.get_first_recording_year(
-                item.mb_trackid)
-            if not recording_date:
-                self._log.info(u'Recording ID not found: {0} for track {0}',
-                               item.mb_trackid,
-                               item_formatted)
-                continue
-            # Apply.
-            for recording_field in ('year', 'month', 'day'):
-                write = False
-                if recording_field in recording_date.keys():
-                    item[u'recording_' +
-                         recording_field] = recording_date[recording_field]
-                    write = True
-            if disambig is not None:
-                item[u'recording_disambiguation'] = str(disambig)
+    def on_import(self, session, task):
+        if self.config['auto']:
+            for item in task.imported_items():
+                self.process_file(item)
+
+    def process_file(self, item):
+        item_formatted = format(item)
+
+        if not item.mb_trackid:
+            self._log.info(u'Skipping track with no mb_trackid: {0}',
+                           item_formatted)
+            return
+        if u'recording_year' in item and item.recording_year and not self.config['force']:
+            self._log.info(u'Skipping already processed track: {0}', item_formatted)
+            return
+        # Get the MusicBrainz recording info.
+        (recording_date, disambig) = self.get_first_recording_year(
+            item.mb_trackid)
+        if not recording_date:
+            self._log.info(u'Recording ID not found: {0} for track {0}',
+                           item.mb_trackid,
+                           item_formatted)
+            return
+        # Apply.
+        write = False
+        for recording_field in ('year', 'month', 'day'):
+            if recording_field in recording_date.keys():
+                item[u'recording_' +
+                     recording_field] = recording_date[recording_field]
                 write = True
-            if write:
-                self._log.info(u'Applying changes to {0}', item_formatted)
-                item.write()
-                item.store()
+        if disambig is not None:
+            item[u'recording_disambiguation'] = str(disambig)
+            write = True
+        if write:
+            self._log.info(u'Applying changes to {0}', item_formatted)
+            item.write()
+            item.store()
+        else:
+            self._log.info(u'Error: {0}', recording_date)
 
     def _make_date_values(self, date_str):
         date_parts = date_str.split('-')
