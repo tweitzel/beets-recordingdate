@@ -79,9 +79,8 @@ class RecordingDatePlugin(BeetsPlugin):
             if recording_field in recording_date.keys():
                 item[u'recording_' +
                      recording_field] = recording_date[recording_field]
-                if self.config['write_over']:
-                    item[u'original_' +
-                         recording_field] = recording_date[recording_field]
+                if self.config['write_over'] and recording_field == 'year':
+                    item[recording_field] = recording_date[recording_field]
                 write = True
         if disambig is not None:
             item[u'recording_disambiguation'] = str(disambig)
