@@ -79,7 +79,7 @@ class RecordingDatePlugin(BeetsPlugin):
             if recording_field in recording_date.keys():
                 item[u'recording_' +
                      recording_field] = recording_date[recording_field]
-                if self.config['write_over'] and recording_field == 'year':
+                if self.config['write_over'] and recording_field == u'year':
                     item[recording_field] = recording_date[recording_field]
                     self._log.info(u'overwriting year field for: {0}', item_formatted)
                 write = True
