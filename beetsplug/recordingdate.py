@@ -2,7 +2,7 @@
 from __future__ import division, absolute_import, print_function
 
 from beets.plugins import BeetsPlugin
-from beets import autotag, library, ui, util, mediafile
+from beets import autotag, library, ui, util, mediafile, config
 from beets.autotag import hooks
 
 import musicbrainzngs
@@ -22,6 +22,7 @@ class RecordingDatePlugin(BeetsPlugin):
             'force': False,
             'write_over': False,
         })
+        musicbrainzngs.set_hostname(config['musicbrainz']['host'].get())
         for recording_field in (
              u'recording_year',
              u'recording_month',
