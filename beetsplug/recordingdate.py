@@ -22,6 +22,7 @@ class RecordingDatePlugin(BeetsPlugin):
             'force': False,
             'write_over': False,
         })
+        #grab global MusicBrainz host setting
         musicbrainzngs.set_hostname(config['musicbrainz']['host'].get())
         for recording_field in (
              u'recording_year',
@@ -63,6 +64,8 @@ class RecordingDatePlugin(BeetsPlugin):
             self._log.info(u'Skipping track with no mb_trackid: {0}',
                            item_formatted)
             return
+        # check for the recording_year and if it exists and not empty
+        # skips the track if force is not configured
         if u'recording_year' in item and item.recording_year and not self.config['force']:
             self._log.info(u'Skipping already processed track: {0}', item_formatted)
             return
@@ -80,6 +83,7 @@ class RecordingDatePlugin(BeetsPlugin):
             if recording_field in recording_date.keys():
                 item[u'recording_' +
                      recording_field] = recording_date[recording_field]
+                # writes over the year tag if configured
                 if self.config['write_over'] and recording_field == u'year':
                     item[recording_field] = recording_date[recording_field]
                     self._log.info(u'overwriting year field for: {0}', item_formatted)
