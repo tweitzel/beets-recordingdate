@@ -123,6 +123,9 @@ class RecordingDatePlugin(BeetsPlugin):
                 if ('direction' in subrecording.keys() and
                         subrecording['direction'] == 'backward'):
                     continue
+                # skip new relationship category samples
+                if subrecording['type'] == u'samples material':
+                    continue
                 (oldest_release, relation_type) = self._recurse_relations(
                     subrecording['target'],
                     oldest_release,
