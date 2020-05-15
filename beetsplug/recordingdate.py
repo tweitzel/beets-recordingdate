@@ -21,6 +21,7 @@ class RecordingDatePlugin(BeetsPlugin):
             'auto': True,
             'force': False,
             'write_over': False,
+            'relations': {'edit', 'first track release', 'remaster'},
         })
         #grab global MusicBrainz host setting
         musicbrainzngs.set_hostname(config['musicbrainz']['host'].get())
@@ -115,6 +116,7 @@ class RecordingDatePlugin(BeetsPlugin):
         x = musicbrainzngs.get_recording_by_id(
             mb_track_id,
             includes=['releases', 'recording-rels'])
+
         if 'recording-relation-list' in x['recording'].keys():
             # recurse down into edits and remasters.
             # Note remasters are deprecated in musicbrainz, but some entries
@@ -124,7 +126,10 @@ class RecordingDatePlugin(BeetsPlugin):
                         subrecording['direction'] == 'backward'):
                     continue
                 # skip new relationship category samples
-                if subrecording['type'] == u'samples material':
+                if subrecording['type'] not in self.config['relations'].as_str_seq():
+                    continue
+                if x['recording']['artist'] != subrecording['artist']:
+                    self._log.info(u'Skipping relation with arist {0} that does not match {1}', subrecording['artist'], x['recording']['artist'])
                     continue
                 (oldest_release, relation_type) = self._recurse_relations(
                     subrecording['target'],
