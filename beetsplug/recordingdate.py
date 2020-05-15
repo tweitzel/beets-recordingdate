@@ -2,8 +2,9 @@
 from __future__ import division, absolute_import, print_function
 
 from beets.plugins import BeetsPlugin
-from beets import autotag, library, ui, util, mediafile, config
+from beets import autotag, library, ui, util, config
 from beets.autotag import hooks
+import mediafile
 
 import musicbrainzngs
 musicbrainzngs.set_useragent(
