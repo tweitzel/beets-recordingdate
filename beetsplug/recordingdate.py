@@ -25,6 +25,7 @@ class RecordingDatePlugin(BeetsPlugin):
         })
         #grab global MusicBrainz host setting
         musicbrainzngs.set_hostname(config['musicbrainz']['host'].get())
+        musicbrainzngs.set_rate_limit(1, config['musicbrainz']['ratelimit'].get())
         for recording_field in (
              u'recording_year',
              u'recording_month',
