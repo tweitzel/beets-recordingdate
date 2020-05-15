@@ -2,8 +2,9 @@
 from __future__ import division, absolute_import, print_function
 
 from beets.plugins import BeetsPlugin
-from beets import autotag, library, ui, util, mediafile, config
+from beets import autotag, library, ui, util, config
 from beets.autotag import hooks
+import mediafile
 
 import musicbrainzngs
 musicbrainzngs.set_useragent(
@@ -129,8 +130,10 @@ class RecordingDatePlugin(BeetsPlugin):
                 # skip new relationship category samples
                 if subrecording['type'] not in self.config['relations'].as_str_seq():
                     continue
-                if x['recording']['artist'] != subrecording['artist']:
-                    self._log.info(u'Skipping relation with arist {0} that does not match {1}', subrecording['artist'], x['recording']['artist'])
+                if 'artist' in x['recording'].keys() and x['recording']['artist'] != subrecording['artist']:
+                    self._log.info(
+                        u'Skipping relation with arist {0} that does not match {1}',
+                        subrecording['artist'], x['recording']['artist'])
                     continue
                 (oldest_release, relation_type) = self._recurse_relations(
                     subrecording['target'],
