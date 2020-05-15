@@ -1,2 +1,2 @@
-phirestalker - https://github.com/phirestalker
-Tod Weitzel - https://github.com/tweitzel
+* phirestalker - https://github.com/phirestalker
+* Tod Weitzel - https://github.com/tweitzel
