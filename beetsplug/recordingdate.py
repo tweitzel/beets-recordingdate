@@ -129,8 +129,10 @@ class RecordingDatePlugin(BeetsPlugin):
                 # skip new relationship category samples
                 if subrecording['type'] not in self.config['relations'].as_str_seq():
                     continue
-                if x['recording']['artist'] != subrecording['artist']:
-                    self._log.info(u'Skipping relation with arist {0} that does not match {1}', subrecording['artist'], x['recording']['artist'])
+                if 'artist' in x['recording'].keys() and x['recording']['artist'] != subrecording['artist']:
+                    self._log.info(
+                        u'Skipping relation with arist {0} that does not match {1}',
+                        subrecording['artist'], x['recording']['artist'])
                     continue
                 (oldest_release, relation_type) = self._recurse_relations(
                     subrecording['target'],
