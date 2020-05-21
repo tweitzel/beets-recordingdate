@@ -15,6 +15,8 @@ musicbrainzngs.set_useragent(
 
 
 class RecordingDatePlugin(BeetsPlugin):
+    importing = False
+
     def __init__(self):
         super(RecordingDatePlugin, self).__init__()
         self.import_stages = [self.on_import]
@@ -57,6 +59,7 @@ class RecordingDatePlugin(BeetsPlugin):
 
     def on_import(self, session, task):
         if self.config['auto']:
+            self.importing = True
             for item in task.imported_items():
                 self.process_file(item)
 
@@ -96,8 +99,10 @@ class RecordingDatePlugin(BeetsPlugin):
             write = True
         if write:
             self._log.info(u'Applying changes to {0}', item_formatted)
-            item.write()
             item.store()
+            if not self.importing:
+                item.write()
+
         else:
             self._log.info(u'Error: {0}', recording_date)
 
