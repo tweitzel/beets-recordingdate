@@ -1,3 +1,8 @@
+# Statement of abandonment
+This plugin was written before the 1.5.0 refactor of `mediafile` and Musicbrainz refactoring their schema to use the `work` type.
+
+Please use the rewritten version of this plugin by @kernitus located at https://github.com/kernitus/beets-oldestdate.
+
 # beets-recordingdate
 Beets plugin that fetches earliest recording date per-track, ideal for greatest-hits albums
 
